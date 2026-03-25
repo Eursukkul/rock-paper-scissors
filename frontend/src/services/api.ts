@@ -1,22 +1,31 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+import type { BotActionResponse, HighScoreResponse, UpdateHighScoreResponse } from '@/types/game';
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  });
-  if (!res.ok) throw new Error(`API error ${res.status}`);
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+export async function getBotAction(): Promise<BotActionResponse> {
+  const res = await fetch(`${API_URL}/api/game/bot-action`);
+  if (!res.ok) {
+    throw new Error('Failed to get bot action');
+  }
   return res.json();
 }
 
-export const api = {
-  playRound: (playerAction: string) =>
-    request('/game/play', { method: 'POST', body: JSON.stringify({ playerAction }) }),
-  resetScore: () =>
-    request('/game/reset-score', { method: 'POST' }),
-  getHighScore: () =>
-    request('/score/high-score'),
-  submitHighScore: (score: number) =>
-    request('/score/high-score', { method: 'POST', body: JSON.stringify({ score }) }),
-};
+export async function getHighScore(): Promise<HighScoreResponse> {
+  const res = await fetch(`${API_URL}/api/score/high-score`);
+  if (!res.ok) {
+    throw new Error('Failed to get high score');
+  }
+  return res.json();
+}
+
+export async function updateHighScore(score: number): Promise<UpdateHighScoreResponse> {
+  const res = await fetch(`${API_URL}/api/score/high-score`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ score }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to update high score');
+  }
+  return res.json();
+}

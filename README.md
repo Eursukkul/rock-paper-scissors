@@ -1,111 +1,121 @@
 # Rock Paper Scissors
 
-A full-stack Rock Paper Scissors web application with real-time high score updates.
+A full-stack Rock Paper Scissors web game with real-time high score sync.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 14, TypeScript, SCSS Modules |
-| Backend | NestJS, TypeScript, Socket.IO |
-| Containerization | Docker, docker-compose |
+- **Frontend**: Next.js 14 + TypeScript + SCSS Modules
+- **Backend**: NestJS + TypeScript
+- **Real-time**: Socket.IO
+- **Storage**: JSON file for high score persistence
+- **Score tracking**: js-cookie (no login required)
 
-## Prerequisites
+## Project Structure
 
-- Docker ≥ 24 and Docker Compose ≥ 2
-- Node.js ≥ 20 (for local development only)
-
----
-
-## Deployment (Ubuntu 20 Server)
-
-### 1. Install Docker
-
-```bash
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-  https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo usermod -aG docker $USER
-newgrp docker
+```
+rock-paper-scissors/
+├── backend/          # NestJS API server (port 3001)
+└── frontend/         # Next.js app (port 3000)
 ```
 
-### 2. Clone the Repository
+## Features
 
-```bash
-git clone <repository-url> rock-paper-scissors
-cd rock-paper-scissors
-```
+- Play Rock, Paper, or Scissors against a bot
+- Bot picks randomly via backend API call
+- 2-second reveal animation (buttons disabled during reveal)
+- Your score persisted in a browser cookie
+- High score persisted on the server (JSON file)
+- Real-time high score broadcast to all connected clients via WebSocket
 
-### 3. Configure Environment (Optional)
+## Getting Started
 
-Copy the example env file if you need to override defaults:
+### Prerequisites
 
-```bash
-cp .env.example .env
-# Edit .env as needed (e.g. change CORS_ORIGIN to your domain)
-```
+- Node.js 18+
+- npm
 
-Default values work out of the box for localhost.
-
-### 4. Build and Start
-
-```bash
-docker compose up --build -d
-```
-
-The app will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001/api
-
-### 5. View Logs
-
-```bash
-# All services
-docker compose logs -f
-
-# Backend only
-docker compose logs -f backend
-
-# Frontend only
-docker compose logs -f frontend
-```
-
-### 6. Stop Services
-
-```bash
-docker compose down
-```
-
----
-
-## Local Development (without Docker)
-
-### Backend
+### Backend Setup
 
 ```bash
 cd backend
+cp .env.example .env
 npm install
-npm run start:dev   # runs on port 3001
+npm run start:dev
 ```
 
-### Frontend
+The backend runs on `http://localhost:3001`.
+
+### Frontend Setup
 
 ```bash
 cd frontend
+cp .env.example .env.local
 npm install
-npm run dev         # runs on port 3000
+npm run dev
 ```
 
----
+The frontend runs on `http://localhost:3000`.
+
+## Environment Variables
+
+### Backend (`backend/.env`)
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `3001` | Port to run the server on |
+| `FRONTEND_URL` | `http://localhost:3000` | Allowed CORS origin |
+
+### Frontend (`frontend/.env.local`)
+
+| Variable | Default | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | `http://localhost:3001` | Backend API URL |
+| `NEXT_PUBLIC_WS_URL` | `http://localhost:3001` | Backend WebSocket URL |
+
+## API Endpoints
+
+### GET /api/game/bot-action
+
+Returns a random bot action.
+
+**Response:**
+```json
+{ "action": "ROCK" }
+```
+
+### GET /api/score/high-score
+
+Returns the current high score.
+
+**Response:**
+```json
+{ "highScore": 42 }
+```
+
+### POST /api/score/high-score
+
+Updates the high score if the submitted score is higher. Broadcasts updated score via WebSocket.
+
+**Request body:**
+```json
+{ "score": 10 }
+```
+
+**Response:**
+```json
+{ "updated": true, "highScore": 10 }
+```
+
+## WebSocket Events
+
+### `highScore:updated`
+
+Emitted to all connected clients when the high score is updated.
+
+**Payload:**
+```json
+{ "highScore": 10 }
+```
 
 ## Running Tests
 
@@ -113,69 +123,33 @@ npm run dev         # runs on port 3000
 
 ```bash
 cd backend
-npm install
-npm test              # run all tests
-npm run test:cov      # with coverage report
+npm test
+npm run test:cov
 ```
 
 ### Frontend
 
 ```bash
 cd frontend
-npm install
-npm test              # run all tests
-npm run test:cov      # with coverage report
+npm test
 ```
 
----
+## Production Deployment
 
-## Architecture
+### Backend
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      Browser                            │
-│                                                         │
-│   Next.js 14 App (port 3000)                           │
-│   ┌────────────┐  ┌────────────┐  ┌─────────────────┐ │
-│   │ ScoreBoard │  │ BotDisplay │  │  ActionButtons  │ │
-│   └────────────┘  └────────────┘  └─────────────────┘ │
-│          │               │                 │            │
-│          └───────────────┴─────────────────┘            │
-│                          │                              │
-│                      useGame hook                       │
-│                    /     |      \                       │
-│              HTTP API  Cookie  WebSocket                │
-└──────────────────/──────|───────\──────────────────────┘
-                  /        |        \
-┌────────────────/─────────|─────────\───────────────────┐
-│  NestJS API (port 3001)  |   Socket.IO                 │
-│                          |                              │
-│  POST /api/game/play     |   Event: highScoreUpdated   │
-│  POST /api/game/reset-score                             │
-│  GET  /api/score/high-score                             │
-│  POST /api/score/high-score                             │
-│                                                         │
-│  In-memory high score storage                           │
-└─────────────────────────────────────────────────────────┘
+```bash
+cd backend
+npm run build
+npm start
 ```
 
-## Game Flow
+### Frontend
 
-1. Player clicks Rock / Paper / Scissors
-2. Frontend calls `POST /api/game/play` with the chosen action
-3. Backend picks a random bot action, computes win/lose/draw, updates cookie score
-4. Frontend reveals the bot action for **2 seconds** (buttons disabled)
-5. After 2 seconds:
-   - If player won → score increments
-   - If new score beats high score → `POST /api/score/high-score` updates server
-   - Backend broadcasts `highScoreUpdated` via WebSocket to **all** connected clients
-6. Bot display resets to "???"
+```bash
+cd frontend
+npm run build
+npm start
+```
 
-## Configuration Reference
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3001` | Backend listen port |
-| `CORS_ORIGIN` | `http://localhost:3000` | Allowed frontend origin |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:3001/api` | Backend REST URL (build-time) |
-| `NEXT_PUBLIC_WS_URL` | `http://localhost:3001` | Backend WebSocket URL (build-time) |
+Set the appropriate environment variables for your production environment.

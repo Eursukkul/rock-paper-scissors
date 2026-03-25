@@ -1,26 +1,29 @@
+'use client';
+
 import styles from './ScoreBoard.module.scss';
 
-interface Props {
-  playerScore: number;
+interface ScoreBoardProps {
+  yourScore: number;
   highScore: number;
   onReset: () => void;
 }
 
-export function ScoreBoard({ playerScore, highScore, onReset }: Props) {
+export default function ScoreBoard({ yourScore, highScore, onReset }: ScoreBoardProps) {
   return (
-    <div className={styles.container}>
-      <div className={styles.score}>
-        <span className={styles.label}>Your Score:</span>
-        <span className={styles.value}>{playerScore}</span>
-        <span className={styles.unit}>turn</span>
+    <div className={styles.scoreBoard}>
+      <div className={styles.scores}>
+        <div className={styles.scoreItem}>
+          <span className={styles.scoreLabel}>Your Score</span>
+          <span className={styles.scoreValue}>{yourScore}</span>
+        </div>
+        <div className={styles.divider} />
+        <div className={styles.scoreItem}>
+          <span className={styles.scoreLabel}>High Score</span>
+          <span className={`${styles.scoreValue} ${styles.highScore}`}>{highScore}</span>
+        </div>
       </div>
-      <div className={styles.score}>
-        <span className={styles.label}>High Score:</span>
-        <span className={styles.value}>{highScore}</span>
-        <span className={styles.unit}>turn</span>
-      </div>
-      <button className={styles.resetBtn} onClick={onReset}>
-        Reset Score
+      <button className={styles.resetButton} onClick={onReset} aria-label="Reset your score">
+        Reset Your Score
       </button>
     </div>
   );

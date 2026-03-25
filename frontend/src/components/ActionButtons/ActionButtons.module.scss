@@ -1,81 +1,79 @@
-.container {
+.actionButtons {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 1.25rem;
   width: 100%;
 }
 
-.label {
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  font-weight: 500;
+.hint {
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
 }
 
 .buttons {
   display: flex;
-  gap: 16px;
+  gap: 1rem;
   flex-wrap: wrap;
   justify-content: center;
 }
 
-.actionBtn {
+.button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 20px 24px;
+  gap: 0.5rem;
+  padding: 1.25rem 1.5rem;
   min-width: 100px;
-  background: var(--color-card);
-  color: var(--color-text);
-  border: 2px solid rgba(99, 102, 241, 0.3);
-  border-radius: var(--border-radius);
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: inherit;
+  color: #ffffff;
 
   &:hover:not(:disabled) {
-    background: rgba(99, 102, 241, 0.15);
-    border-color: var(--color-primary);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.4);
     transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   }
 
   &:active:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
   }
 
-  &:disabled {
+  &.disabled {
     opacity: 0.4;
     cursor: not-allowed;
-    border-color: rgba(99, 102, 241, 0.1);
+    pointer-events: none;
   }
 }
 
 .emoji {
   font-size: 2.5rem;
   line-height: 1;
-  display: block;
 }
 
-.name {
+.label {
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 @media (max-width: 480px) {
   .buttons {
-    gap: 10px;
+    gap: 0.75rem;
   }
 
-  .actionBtn {
-    padding: 14px 16px;
-    min-width: 80px;
+  .button {
+    padding: 1rem 1.25rem;
+    min-width: 85px;
   }
 
   .emoji {

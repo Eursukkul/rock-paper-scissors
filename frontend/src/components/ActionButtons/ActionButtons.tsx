@@ -1,27 +1,34 @@
-import { Action } from '@/types/game';
-import { ACTIONS, ACTION_EMOJI } from '@/constants/game';
+'use client';
+
+import type { Action } from '@/types/game';
 import styles from './ActionButtons.module.scss';
 
-interface Props {
+interface ActionButtonsProps {
+  onPlay: (action: Action) => void;
   disabled: boolean;
-  onAction: (action: Action) => void;
 }
 
-export function ActionButtons({ disabled, onAction }: Props) {
+const ACTIONS: { action: Action; emoji: string; label: string }[] = [
+  { action: 'ROCK', emoji: '🪨', label: 'Rock' },
+  { action: 'PAPER', emoji: '📄', label: 'Paper' },
+  { action: 'SCISSORS', emoji: '✂️', label: 'Scissors' },
+];
+
+export default function ActionButtons({ onPlay, disabled }: ActionButtonsProps) {
   return (
-    <div className={styles.container}>
-      <span className={styles.label}>Your action:</span>
+    <div className={styles.actionButtons}>
+      <p className={styles.hint}>Choose your move</p>
       <div className={styles.buttons}>
-        {ACTIONS.map(action => (
+        {ACTIONS.map(({ action, emoji, label }) => (
           <button
             key={action}
-            className={styles.actionBtn}
+            className={`${styles.button} ${disabled ? styles.disabled : ''}`}
+            onClick={() => onPlay(action)}
             disabled={disabled}
-            onClick={() => onAction(action)}
-            aria-label={action}
+            aria-label={label}
           >
-            <span className={styles.emoji}>{ACTION_EMOJI[action]}</span>
-            <span className={styles.name}>{action.toUpperCase()}</span>
+            <span className={styles.emoji}>{emoji}</span>
+            <span className={styles.label}>{label}</span>
           </button>
         ))}
       </div>

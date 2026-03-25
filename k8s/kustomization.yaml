@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: rock-paper-scissors
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - rabbitmq.yaml
+  - backend.yaml
+  - frontend.yaml
+  - nginx-configmap.yaml
+  - nginx.yaml
+  - monitoring.yaml

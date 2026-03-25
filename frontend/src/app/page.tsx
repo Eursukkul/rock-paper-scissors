@@ -1,11 +1,11 @@
-import { api } from '@/services/api';
-import { GameClient } from '@/components/GameClient/GameClient';
+import GameBoard from '@/components/GameBoard/GameBoard';
+import styles from './page.module.scss';
 
-export default async function Home() {
-  let initialHighScore = 0;
-  try {
-    const data = await api.getHighScore() as any;
-    initialHighScore = data.highScore ?? 0;
-  } catch {}
-  return <GameClient initialHighScore={initialHighScore} />;
+export default function Home() {
+  return (
+    <main className={styles.main}>
+      <h1 className={styles.title}>Rock Paper Scissors</h1>
+      <GameBoard />
+    </main>
+  );
 }

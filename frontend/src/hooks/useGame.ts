@@ -1,69 +1,122 @@
 'use client';
-import { useState, useCallback, useRef } from 'react';
-import { api } from '@/services/api';
-import { useWebSocket } from './useWebSocket';
-import { BOT_REVEAL_DELAY_MS } from '@/constants/game';
-import { Action, GamePhase, GameResult } from '@/types/game';
 
-interface GameState {
-  phase: GamePhase;
-  playerScore: number;
-  highScore: number;
-  botAction: Action | null;
-  lastResult: GameResult | null;
+import { useState, useCallback, useEffect, useRef } from 'react';
+import Cookies from 'js-cookie';
+import type { Action, GameResult } from '@/types/game';
+import { getBotAction, getHighScore, updateHighScore } from '@/services/api';
+
+const SCORE_COOKIE = 'rps_your_score';
+const ANIMATION_DURATION = 2000;
+
+function determineResult(playerAction: Action, botAction: Action): GameResult {
+  if (playerAction === botAction) return 'DRAW';
+
+  const winConditions: Record<Action, Action> = {
+    ROCK: 'SCISSORS',
+    PAPER: 'ROCK',
+    SCISSORS: 'PAPER',
+  };
+
+  return winConditions[playerAction] === botAction ? 'WIN' : 'LOSE';
 }
 
-export function useGame(initialHighScore: number) {
-  const [state, setState] = useState<GameState>({
-    phase: 'idle',
-    playerScore: 0,
-    highScore: initialHighScore,
-    botAction: null,
-    lastResult: null,
-  });
+export function useGame() {
+  const [yourScore, setYourScore] = useState<number>(0);
+  const [highScore, setHighScore] = useState<number>(0);
+  const [botAction, setBotAction] = useState<Action | null>(null);
+  const [lastResult, setLastResult] = useState<GameResult>(null);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const stateRef = useRef(state);
-  stateRef.current = state;
+  // Use a ref to avoid stale closure in useSocket callback
+  const yourScoreRef = useRef(yourScore);
+  yourScoreRef.current = yourScore;
 
-  const handleHighScoreUpdate = useCallback((score: number) => {
-    setState(prev => ({ ...prev, highScore: score }));
+  // Load score from cookie on mount
+  useEffect(() => {
+    const savedScore = Cookies.get(SCORE_COOKIE);
+    if (savedScore) {
+      const parsed = parseInt(savedScore, 10);
+      if (!isNaN(parsed)) {
+        setYourScore(parsed);
+      }
+    }
   }, []);
 
-  useWebSocket(handleHighScoreUpdate);
+  // Load high score from server on mount
+  useEffect(() => {
+    getHighScore()
+      .then((data) => {
+        setHighScore(data.highScore);
+      })
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
 
-  const handlePlayerAction = useCallback(async (action: Action) => {
-    if (stateRef.current.phase !== 'idle') return;
-    setState(prev => ({ ...prev, phase: 'revealing', lastResult: null }));
+  // Persist score to cookie whenever it changes
+  useEffect(() => {
+    Cookies.set(SCORE_COOKIE, String(yourScore), { expires: 365 });
+  }, [yourScore]);
+
+  const handleHighScoreUpdate = useCallback((newHighScore: number) => {
+    setHighScore(newHighScore);
+  }, []);
+
+  const handlePlay = useCallback(async (playerAction: Action) => {
+    if (isAnimating) return;
+
+    setIsAnimating(true);
+    setLastResult(null);
+    setBotAction(null);
+
     try {
-      const res = await api.playRound(action) as any;
-      const { botAction, result, playerScore } = res;
-      setState(prev => ({ ...prev, botAction, lastResult: result, playerScore }));
+      const { action: botChoice } = await getBotAction();
+      setBotAction(botChoice);
+
+      const result = determineResult(playerAction, botChoice);
+
       setTimeout(async () => {
-        const currentState = stateRef.current;
-        if (result === 'win' && playerScore > currentState.highScore) {
+        setLastResult(result);
+        setBotAction(null);
+
+        if (result === 'WIN') {
+          const newScore = yourScoreRef.current + 1;
+          setYourScore(newScore);
+
+          // Check if new score beats high score
           try {
-            const hsRes = await api.submitHighScore(playerScore) as any;
-            setState(prev => ({ ...prev, botAction: null, phase: 'idle', highScore: hsRes.highScore }));
-          } catch {
-            setState(prev => ({ ...prev, botAction: null, phase: 'idle' }));
+            const updateResult = await updateHighScore(newScore);
+            if (updateResult.updated) {
+              setHighScore(updateResult.highScore);
+            }
+          } catch (err) {
+            console.error('Failed to update high score:', err);
           }
-        } else {
-          setState(prev => ({ ...prev, botAction: null, phase: 'idle' }));
         }
-      }, BOT_REVEAL_DELAY_MS);
-    } catch {
-      setState(prev => ({ ...prev, phase: 'idle' }));
+
+        setIsAnimating(false);
+      }, ANIMATION_DURATION);
+    } catch (err) {
+      console.error('Failed to get bot action:', err);
+      setIsAnimating(false);
     }
+  }, [isAnimating]);
+
+  const resetScore = useCallback(() => {
+    setYourScore(0);
+    setLastResult(null);
+    Cookies.set(SCORE_COOKIE, '0', { expires: 365 });
   }, []);
 
-  const handleReset = useCallback(async () => {
-    try {
-      await api.resetScore();
-      setState(prev => ({ ...prev, playerScore: 0 }));
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
-
-  return { state, handlePlayerAction, handleReset };
+  return {
+    yourScore,
+    highScore,
+    botAction,
+    lastResult,
+    isAnimating,
+    isLoading,
+    handlePlay,
+    resetScore,
+    handleHighScoreUpdate,
+  };
 }

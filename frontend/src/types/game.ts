@@ -1,11 +1,8 @@
-export type Action = 'rock' | 'paper' | 'scissors';
-export type GameResult = 'win' | 'lose' | 'draw';
-export type GamePhase = 'idle' | 'revealing' | 'result';
+export type Action = 'ROCK' | 'PAPER' | 'SCISSORS';
+export type GameResult = 'WIN' | 'LOSE' | 'DRAW' | null;
 
-export interface PlayRoundResponse {
-  botAction: Action;
-  result: GameResult;
-  playerScore: number;
+export interface BotActionResponse {
+  action: Action;
 }
 
 export interface HighScoreResponse {
@@ -13,14 +10,14 @@ export interface HighScoreResponse {
 }
 
 export interface UpdateHighScoreResponse {
-  highScore: number;
   updated: boolean;
+  highScore: number;
 }
 
 export interface GameState {
-  phase: GamePhase;
-  playerScore: number;
+  yourScore: number;
   highScore: number;
   botAction: Action | null;
-  lastResult: GameResult | null;
+  lastResult: GameResult;
+  isAnimating: boolean;
 }

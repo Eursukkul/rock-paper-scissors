@@ -1,0 +1,39 @@
+{
+  "name": "rps-api-tests",
+  "version": "1.0.0",
+  "description": "API tests for Rock Paper Scissors",
+  "scripts": {
+    "test": "jest --forceExit",
+    "test:watch": "jest --watch --forceExit",
+    "test:cov": "jest --coverage --forceExit"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.4",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "socket.io-client": "^4.7.4"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "node",
+    "extensionsToTreatAsEsm": [".ts"],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "useESM": true
+        }
+      ]
+    },
+    "testTimeout": 30000,
+    "globalSetup": "./setup.ts"
+  }
+}

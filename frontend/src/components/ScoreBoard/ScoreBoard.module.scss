@@ -1,63 +1,73 @@
-.container {
+.scoreBoard {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  background: var(--color-card);
-  border-radius: var(--border-radius);
-  padding: 24px 32px;
+  gap: 1.25rem;
+  padding: 1.5rem 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  max-width: 480px;
 }
 
-.score {
+.scores {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  gap: 2rem;
   width: 100%;
   justify-content: center;
 }
 
-.label {
-  color: var(--color-muted);
-  font-size: 0.95rem;
-  font-weight: 500;
-  min-width: 100px;
-  text-align: right;
+.scoreItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.value {
-  color: var(--color-primary);
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1;
-  min-width: 40px;
-  text-align: center;
-}
-
-.unit {
-  color: var(--color-muted);
+.scoreLabel {
   font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
 }
 
-.resetBtn {
-  margin-top: 8px;
-  padding: 8px 24px;
+.scoreValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+  min-width: 3rem;
+  text-align: center;
+
+  &.highScore {
+    color: #fbbf24;
+  }
+}
+
+.divider {
+  width: 1px;
+  height: 3rem;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.resetButton {
+  padding: 0.6rem 1.5rem;
   background: transparent;
-  color: var(--color-muted);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 2rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    color: var(--color-text);
-    border-color: var(--color-muted);
-    background: rgba(148, 163, 184, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #ffffff;
   }
 
   &:active {
@@ -66,16 +76,15 @@
 }
 
 @media (max-width: 480px) {
-  .container {
-    padding: 16px 20px;
+  .scoreBoard {
+    padding: 1.25rem 1.5rem;
   }
 
-  .label {
-    min-width: 80px;
-    font-size: 0.85rem;
+  .scores {
+    gap: 1.5rem;
   }
 
-  .value {
-    font-size: 1.6rem;
+  .scoreValue {
+    font-size: 2rem;
   }
 }

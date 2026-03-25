@@ -1,29 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import { Action, GameResult, PlayRoundResponse } from '../types/game.types';
+import { MetricsService } from '../metrics/metrics.service';
+
+export type Action = 'ROCK' | 'PAPER' | 'SCISSORS';
+
+export interface BotActionResponse {
+  action: Action;
+}
+
+export type GameResult = 'WIN' | 'LOSE' | 'DRAW';
 
 @Injectable()
 export class GameService {
-  private readonly ACTIONS: Action[] = ['rock', 'paper', 'scissors'];
+  private readonly actions: Action[] = ['ROCK', 'PAPER', 'SCISSORS'];
 
-  pickBotAction(): Action {
-    const idx = Math.floor(Math.random() * this.ACTIONS.length);
-    return this.ACTIONS[idx];
+  constructor(private readonly metricsService: MetricsService) {}
+
+  getRandomBotAction(): BotActionResponse {
+    const randomIndex = Math.floor(Math.random() * this.actions.length);
+    const randomAction = this.actions[randomIndex];
+    this.metricsService.botActionCounter.inc({ action: randomAction });
+    return { action: randomAction };
   }
 
   determineResult(playerAction: Action, botAction: Action): GameResult {
-    if (playerAction === botAction) return 'draw';
-    const wins: Record<Action, Action> = {
-      rock: 'scissors',
-      scissors: 'paper',
-      paper: 'rock',
-    };
-    return wins[playerAction] === botAction ? 'win' : 'lose';
-  }
+    if (playerAction === botAction) return 'DRAW';
 
-  playRound(playerAction: Action, currentScore: number): PlayRoundResponse {
-    const botAction = this.pickBotAction();
-    const result = this.determineResult(playerAction, botAction);
-    const playerScore = result === 'win' ? currentScore + 1 : currentScore;
-    return { botAction, result, playerScore };
+    const winConditions: Record<Action, Action> = {
+      ROCK: 'SCISSORS',
+      PAPER: 'ROCK',
+      SCISSORS: 'PAPER',
+    };
+
+    return winConditions[playerAction] === botAction ? 'WIN' : 'LOSE';
   }
 }

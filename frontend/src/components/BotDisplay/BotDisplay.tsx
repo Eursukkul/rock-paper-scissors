@@ -1,24 +1,47 @@
-import { Action } from '@/types/game';
-import { ACTION_EMOJI } from '@/constants/game';
+'use client';
+
+import type { Action, GameResult } from '@/types/game';
 import styles from './BotDisplay.module.scss';
 
-interface Props {
+interface BotDisplayProps {
   botAction: Action | null;
+  lastResult: GameResult;
+  isAnimating: boolean;
 }
 
-export function BotDisplay({ botAction }: Props) {
+const ACTION_EMOJI: Record<Action, string> = {
+  ROCK: '🪨',
+  PAPER: '📄',
+  SCISSORS: '✂️',
+};
+
+const RESULT_CONFIG: Record<NonNullable<GameResult>, { label: string; className: string }> = {
+  WIN: { label: 'You Win!', className: styles.win },
+  LOSE: { label: 'You Lose!', className: styles.lose },
+  DRAW: { label: "It's a Draw!", className: styles.draw },
+};
+
+export default function BotDisplay({ botAction, lastResult, isAnimating }: BotDisplayProps) {
+  const resultConfig = lastResult ? RESULT_CONFIG[lastResult] : null;
+
   return (
-    <div className={styles.container}>
-      <span className={styles.label}>Bot action:</span>
-      <div className={styles.display}>
+    <div className={styles.botDisplay}>
+      <p className={styles.label}>Bot&apos;s Choice</p>
+      <div className={`${styles.actionDisplay} ${isAnimating && botAction ? styles.revealed : ''}`}>
         {botAction ? (
-          <span className={styles.action}>
-            {ACTION_EMOJI[botAction]} {botAction.toUpperCase()}
-          </span>
+          <span className={styles.emoji}>{ACTION_EMOJI[botAction]}</span>
         ) : (
           <span className={styles.unknown}>???</span>
         )}
       </div>
+      {botAction && (
+        <p className={styles.actionName}>{botAction}</p>
+      )}
+      {!isAnimating && resultConfig && (
+        <div className={`${styles.result} ${resultConfig.className}`}>
+          {resultConfig.label}
+        </div>
+      )}
     </div>
   );
 }

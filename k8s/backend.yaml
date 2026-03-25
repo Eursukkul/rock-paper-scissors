@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rps-backend
+  namespace: rock-paper-scissors
+  labels:
+    app: rps-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rps-backend
+  template:
+    metadata:
+      labels:
+        app: rps-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "3001"
+    spec:
+      containers:
+        - name: backend
+          image: rock-paper-scissors-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3001
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: rps-config
+                  key: PORT
+            - name: FRONTEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: rps-config
+                  key: FRONTEND_URL
+            - name: RABBITMQ_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: rps-config
+                  key: RABBITMQ_URL
+            - name: INSTANCE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          readinessProbe:
+            httpGet:
+              path: /api/score/high-score
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/score/high-score
+              port: 3001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: backend-data
+              mountPath: /app/data
+      volumes:
+        - name: backend-data
+          persistentVolumeClaim:
+            claimName: rps-backend-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rps-backend-svc
+  namespace: rock-paper-scissors
+spec:
+  selector:
+    app: rps-backend
+  ports:
+    - port: 3001
+      targetPort: 3001
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rps-backend-pvc
+  namespace: rock-paper-scissors
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rps-backend-hpa
+  namespace: rock-paper-scissors
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rps-backend
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
