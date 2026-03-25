@@ -27,7 +27,10 @@ export default function BotDisplay({ botAction, lastResult, isAnimating }: BotDi
   return (
     <div className={styles.botDisplay}>
       <p className={styles.label}>Bot&apos;s Choice</p>
-      <div className={`${styles.actionDisplay} ${isAnimating && botAction ? styles.revealed : ''}`}>
+      <div
+        className={`${styles.actionDisplay} ${isAnimating && botAction ? styles.revealed : ''}`}
+        data-testid="bot-action"
+      >
         {botAction ? (
           <span className={styles.emoji}>{ACTION_EMOJI[botAction]}</span>
         ) : (
